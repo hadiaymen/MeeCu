@@ -7,10 +7,26 @@ const { v4: uuidv4 } = require('uuid');
 const app = express();
 app.use(cors());
 
+// Health check — keeps Render free instance alive and lets Netlify verify
+app.get('/health', (req, res) => res.json({ status: 'ok' }));
+
+const ALLOWED_ORIGINS = [
+  /https?:\/\/localhost(:\d+)?$/,           // local dev
+  /https?:\/\/.*\.netlify\.app$/,           // any Netlify subdomain
+  /https?:\/\/meecu\..*/,                   // custom domain if added later
+];
+
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
-    origin: '*',
+    origin: (origin, cb) => {
+      // Allow requests with no origin (e.g. mobile apps, curl)
+      if (!origin) return cb(null, true);
+      const allowed = ALLOWED_ORIGINS.some(pattern => pattern.test(origin));
+      if (allowed) return cb(null, true);
+      console.warn('CORS blocked origin:', origin);
+      cb(new Error('Not allowed by CORS'));
+    },
     methods: ['GET', 'POST']
   }
 });

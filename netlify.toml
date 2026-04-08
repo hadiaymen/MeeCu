@@ -1,9 +1,14 @@
 [build]
-  base = "client"
+  base    = "client"
   command = "npm run build"
   publish = "dist"
 
+  # REQUIRED: Set this in Netlify → Site Settings → Environment Variables
+  # Copy your Render server URL here, e.g: https://meecu-server.onrender.com
+  # [build.environment]
+  #   VITE_SERVER_URL = "https://YOUR-RENDER-APP.onrender.com"
+
 [[redirects]]
-  from = "/*"
-  to = "/index.html"
+  from   = "/*"
+  to     = "/index.html"
   status = 200

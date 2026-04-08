@@ -5,15 +5,30 @@ const SocketContext = createContext(null);
 
 export const useSocket = () => useContext(SocketContext);
 
-// Let Socket.io infer the URL automatically so it works via Vite proxy
+// In production (Netlify), VITE_SERVER_URL must be set to your Render server URL.
+// In development, Vite's proxy handles /socket.io → localhost:5000, so leave it empty.
 const SERVER_URL = import.meta.env.VITE_SERVER_URL || '';
 
 export const SocketProvider = ({ children }) => {
   const [socket, setSocket] = useState(null);
 
   useEffect(() => {
-    // Only connect once
-    const newSocket = io(SERVER_URL);
+    const newSocket = io(SERVER_URL, {
+      // Allow the browser to reconnect automatically
+      reconnectionAttempts: 5,
+      reconnectionDelay: 1000,
+    });
+
+    newSocket.on('connect_error', (err) => {
+      console.error('[MeeCU] Socket connection failed:', err.message);
+      if (!SERVER_URL) {
+        console.error(
+          '[MeeCU] VITE_SERVER_URL is not set. ' +
+          'Deploy your server and set VITE_SERVER_URL in Netlify → Site Settings → Env vars.'
+        );
+      }
+    });
+
     setSocket(newSocket);
 
     return () => {
