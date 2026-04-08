@@ -80,7 +80,7 @@ export default function Landing() {
 
       <nav className="relative z-10 flex items-center justify-between px-6 py-4">
         <div className="flex items-center gap-2.5">
-          <div className="logo-dot"></div>
+          <img src="/icon.png" className="app-logo" alt="MeeCu Logo" />
           <span style={{ fontSize: '18px', fontWeight: 800, letterSpacing: '-0.02em' }}>MeeCU</span>
         </div>
         <div className="online-badge">
