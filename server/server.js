@@ -31,10 +31,15 @@ io.on('connection', (socket) => {
     // Check if there's someone in the queue
     let matchIndex = -1;
     
-    if (matchPreference === 'dept' || matchPreference === 'same') {
+    if (matchPreference === 'dept') {
+      // Try to find someone from the same department who also wants dept-match OR random
       matchIndex = waitingQueue.findIndex(u => u.dept === department);
+      if (matchIndex === -1) {
+        // Fall back to any waiting user if none from same dept
+        matchIndex = waitingQueue.length > 0 ? 0 : -1;
+      }
     } else {
-      // Just find the first waiting user
+      // 'random': match with anyone
       matchIndex = waitingQueue.length > 0 ? 0 : -1;
     }
 
@@ -69,6 +74,15 @@ io.on('connection', (socket) => {
       // No match found, join queue
       waitingQueue.push({ dept: department, socketId: socket.id, name });
       console.log(`${name} (${department}) joined the wait queue.`);
+    }
+  });
+
+  // User explicitly cancelled queue search
+  socket.on('leave-queue', () => {
+    const before = waitingQueue.length;
+    waitingQueue = waitingQueue.filter(u => u.socketId !== socket.id);
+    if (waitingQueue.length < before) {
+      console.log(`${socket.id} left the queue.`);
     }
   });
 

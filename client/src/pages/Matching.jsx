@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate, useLocation, Navigate } from 'react-router-dom';
 import { useSocket } from '../context/SocketContext';
 
@@ -10,6 +10,8 @@ export default function Matching() {
   const [onlineCount, setOnlineCount] = useState(247);
 
   const userData = location.state;
+  // Stabilize userData reference so useEffect doesn't re-fire
+  const userDataRef = useRef(userData);
 
   useEffect(() => {
     // Pulse online count
@@ -20,7 +22,9 @@ export default function Matching() {
   }, []);
 
   useEffect(() => {
-    if (!socket || !userData) return;
+    if (!socket || !userDataRef.current) return;
+
+    const currentUserData = userDataRef.current;
 
     const handleMatchFound = ({ roomId, partner }) => {
       setStatus('Match Found! Connecting…');
@@ -28,7 +32,7 @@ export default function Matching() {
         navigate('/chat', { 
           state: { 
             roomId,
-            userData,
+            userData: currentUserData,
             partner
           },
           replace: true
@@ -38,22 +42,25 @@ export default function Matching() {
 
     socket.on('match-found', handleMatchFound);
 
-    // Join the queue
-    socket.emit('join-queue', userData);
+    // Join the queue — only runs once because socket is stable
+    socket.emit('join-queue', currentUserData);
 
     return () => {
       socket.off('match-found', handleMatchFound);
+      // Tell the server to remove us from the waiting queue on unmount
+      socket.emit('leave-queue', socket.id);
     };
-  }, [socket, userData, navigate]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [socket]);
 
   if (!userData) {
     return <Navigate to="/" />;
   }
 
   const cancelSearch = () => {
-    // Navigate home, the unmount will close socket listeners 
-    // And ideally we'd also emit a leave-queue event but 'disconnect' works or reload.
-    window.location.href = '/'; 
+    // Emit leave-queue before navigating so the server removes us immediately
+    if (socket) socket.emit('leave-queue', socket.id);
+    navigate('/');
   };
 
   return (
