@@ -11,10 +11,24 @@
     <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
     
+    <!-- PWA Manifest & App Icons -->
+    <link rel="manifest" href="/manifest.json" />
+    <meta name="theme-color" content="#11131A" />
+    <link rel="apple-touch-icon" href="/icon-192x192.png" />
+    
     <title>MeeCU Chat</title>
   </head>
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/service-worker.js')
+            .then(registration => console.log('ServiceWorker registered:', registration))
+            .catch(error => console.log('ServiceWorker error:', error));
+        });
+      }
+    </script>
   </body>
 </html>

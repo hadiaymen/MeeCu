@@ -20,8 +20,15 @@ export default function Landing() {
   const [onlineCount, setOnlineCount] = useState(247);
   const [nameError, setNameError] = useState(false);
   const [deptError, setDeptError] = useState(false);
+  const [deferredPrompt, setDeferredPrompt] = useState(null);
 
   useEffect(() => {
+    // PWA Install Prompt Listener
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      setDeferredPrompt(e);
+    });
+
     // Randomize online count slightly
     const base = 241;
     setOnlineCount(base + Math.floor(Math.random() * 20 - 5));
@@ -32,6 +39,18 @@ export default function Landing() {
     }, 3000);
     return () => clearInterval(interval);
   }, []);
+
+  const handleInstallClick = () => {
+    if (deferredPrompt) {
+      deferredPrompt.prompt();
+      deferredPrompt.userChoice.then((choiceResult) => {
+        if (choiceResult.outcome === 'accepted') {
+          console.log('User accepted the PWA install prompt');
+        }
+        setDeferredPrompt(null);
+      });
+    }
+  };
 
   const handleSubmit = () => {
     setNameError(false);
@@ -148,6 +167,17 @@ export default function Landing() {
               <span className="material-symbols-outlined" style={{ fontSize: '20px' }}>chat</span>
               Start Chat
             </button>
+
+            {deferredPrompt && (
+              <button 
+                onClick={handleInstallClick}
+                className="mt-3 btn-ghost w-full py-3 rounded-full font-bold flex items-center justify-center gap-2" 
+                style={{ fontSize: '14px', letterSpacing: '0.02em', color: '#9CA3AF' }}
+              >
+                <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>download</span>
+                Install App (PWA)
+              </button>
+            )}
           </div>
         </div>
 
