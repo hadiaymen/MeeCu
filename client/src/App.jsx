@@ -3,6 +3,7 @@ import { SocketProvider } from './context/SocketContext';
 import Landing from './pages/Landing';
 import Matching from './pages/Matching';
 import TextChat from './pages/TextChat';
+import Watermark from './components/Watermark';
 import './index.css';
 
 function App() {
@@ -14,6 +15,7 @@ function App() {
           <Route path="/matching" element={<Matching />} />
           <Route path="/chat" element={<TextChat />} />
         </Routes>
+        <Watermark />
       </BrowserRouter>
     </SocketProvider>
   );
