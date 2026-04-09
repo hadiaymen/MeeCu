@@ -14,10 +14,9 @@ export const SocketProvider = ({ children }) => {
 
   useEffect(() => {
     const newSocket = io(SERVER_URL, {
-      reconnectionAttempts: Infinity,
-      reconnectionDelay: 2000,
-      reconnectionDelayMax: 5000,
-      timeout: 20000,
+      // Allow the browser to reconnect automatically
+      reconnectionAttempts: 5,
+      reconnectionDelay: 1000,
     });
 
     newSocket.on('connect_error', (err) => {
