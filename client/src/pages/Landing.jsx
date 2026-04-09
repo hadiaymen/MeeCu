@@ -97,7 +97,7 @@ export default function Landing() {
           <div className="text-center mb-7 anim-1">
             <h1 style={{ fontSize: '28px', fontWeight: 900, lineHeight: 1.15, letterSpacing: '-0.03em' }} className="mb-2">
               Meet Someone New<br />
-              <span style={{ color: '#FF3B3B' }}>Through Chat</span>
+              <span style={{ color: 'var(--color-primary)' }}>Through Chat</span>
             </h1>
             <p style={{ color: '#9CA3AF', fontSize: '13.5px', lineHeight: 1.55, fontWeight: 400 }}>
               Anonymous. Safe. Only for your campus community.
@@ -115,7 +115,7 @@ export default function Landing() {
                 onChange={(e) => setName(e.target.value)}
                 placeholder="e.g. Alex"
                 className="glass-input w-full px-4 py-3 rounded-2xl text-white"
-                style={{ fontSize: '15px', fontWeight: 600, borderColor: nameError ? '#FF3B3B' : '' }}
+                style={{ fontSize: '15px', fontWeight: 600, borderColor: nameError ? 'var(--color-primary)' : '' }}
               />
             </div>
             <div>
@@ -126,7 +126,7 @@ export default function Landing() {
                 value={department}
                 onChange={(e) => setDepartment(e.target.value)}
                 className="glass-input w-full px-4 py-3 rounded-2xl text-white"
-                style={{ fontSize: '15px', fontWeight: 600, appearance: 'none', borderColor: deptError ? '#FF3B3B' : '' }}
+                style={{ fontSize: '15px', fontWeight: 600, appearance: 'none', borderColor: deptError ? 'var(--color-primary)' : '' }}
               >
                 <option value="" style={{ background: '#1a1c24' }}>Select department…</option>
                 {DEPARTMENTS.map(dept => (
@@ -183,8 +183,8 @@ export default function Landing() {
 
         <div className="w-full max-w-sm mt-5 flex flex-col gap-3">
           <div className="feature-card px-5 py-4 flex items-start gap-4 anim-4">
-            <div style={{ width: '36px', height: '36px', borderRadius: '12px', background: 'rgba(255,59,59,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-              <span className="material-symbols-outlined" style={{ fontSize: '19px', color: '#FF3B3B' }}>verified_user</span>
+            <div style={{ width: '36px', height: '36px', borderRadius: '12px', background: 'rgba(255,45,155,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+              <span className="material-symbols-outlined" style={{ fontSize: '19px', color: 'var(--color-primary)' }}>verified_user</span>
             </div>
             <div>
               <p style={{ fontWeight: 700, fontSize: '14px', marginBottom: '3px' }}>Verified Only</p>
@@ -192,8 +192,8 @@ export default function Landing() {
             </div>
           </div>
           <div className="feature-card px-5 py-4 flex items-start gap-4 anim-5">
-            <div style={{ width: '36px', height: '36px', borderRadius: '12px', background: 'rgba(255,59,59,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-              <span className="material-symbols-outlined" style={{ fontSize: '19px', color: '#FF3B3B' }}>lock</span>
+            <div style={{ width: '36px', height: '36px', borderRadius: '12px', background: 'rgba(0,212,255,0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+              <span className="material-symbols-outlined" style={{ fontSize: '19px', color: 'var(--color-secondary)' }}>lock</span>
             </div>
             <div>
               <p style={{ fontWeight: 700, fontSize: '14px', marginBottom: '3px' }}>End-to-End Private</p>
@@ -201,8 +201,8 @@ export default function Landing() {
             </div>
           </div>
           <div className="feature-card px-5 py-4 flex items-start gap-4 anim-6">
-            <div style={{ width: '36px', height: '36px', borderRadius: '12px', background: 'rgba(255,59,59,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-              <span className="material-symbols-outlined" style={{ fontSize: '19px', color: '#FF3B3B' }}>bolt</span>
+            <div style={{ width: '36px', height: '36px', borderRadius: '12px', background: 'rgba(160,32,240,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+              <span className="material-symbols-outlined" style={{ fontSize: '19px', color: 'var(--color-tertiary)' }}>bolt</span>
             </div>
             <div>
               <p style={{ fontWeight: 700, fontSize: '14px', marginBottom: '3px' }}>Instant Match</p>

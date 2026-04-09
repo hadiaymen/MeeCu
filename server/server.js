@@ -39,28 +39,24 @@ io.on('connection', (socket) => {
   console.log('User connected:', socket.id);
 
   // When user is searching for a match
-  socket.on('join-queue', (userData) => {
+  socket.on('join_queue', (userData) => {
     // Prevent duplicate entries from React Strict Mode double-firing
     waitingQueue = waitingQueue.filter(u => u.socketId !== socket.id);
-    const { name, department, matchPreference } = userData; // matchPreference: 'same' | 'random'
+    const { name, department, matchPreference } = userData;
     
-    // Check if there's someone in the queue
+    // Check if there's someone in the queue (excluding self)
     let matchIndex = -1;
     
     if (matchPreference === 'dept') {
-      // Try to find someone from the same department who also wants dept-match OR random
-      matchIndex = waitingQueue.findIndex(u => u.dept === department);
+      matchIndex = waitingQueue.findIndex(u => u.dept === department && u.socketId !== socket.id);
       if (matchIndex === -1) {
-        // Fall back to any waiting user if none from same dept
-        matchIndex = waitingQueue.length > 0 ? 0 : -1;
+        matchIndex = waitingQueue.findIndex(u => u.socketId !== socket.id);
       }
     } else {
-      // 'random': match with anyone
-      matchIndex = waitingQueue.length > 0 ? 0 : -1;
+      matchIndex = waitingQueue.findIndex(u => u.socketId !== socket.id);
     }
 
     if (matchIndex !== -1) {
-      // Found a match
       const partner = waitingQueue.splice(matchIndex, 1)[0];
       const roomId = uuidv4();
 
@@ -74,38 +70,78 @@ io.on('connection', (socket) => {
 
       console.log(`Matched ${socket.id} with ${partner.socketId} in room ${roomId}`);
 
-      // Notify both that a match is found, sending each partner's details
-      socket.emit('match-found', { 
+      socket.emit('matched', { 
         roomId, 
         partner: { name: partner.name, department: partner.dept } 
       });
       
       if (partnerSocket) {
-        partnerSocket.emit('match-found', { 
+        partnerSocket.emit('matched', { 
           roomId, 
           partner: { name: userData.name, department: userData.department } 
         });
       }
     } else {
-      // No match found, join queue
       waitingQueue.push({ dept: department, socketId: socket.id, name });
       console.log(`${name} (${department}) joined the wait queue.`);
     }
   });
 
-  // User explicitly cancelled queue search
-  socket.on('leave-queue', () => {
-    const before = waitingQueue.length;
-    waitingQueue = waitingQueue.filter(u => u.socketId !== socket.id);
-    if (waitingQueue.length < before) {
-      console.log(`${socket.id} left the queue.`);
+  socket.on('next_user', (userData) => {
+    console.log(`User ${socket.id} requested next user`);
+    
+    // 1. Notify partner and leave current rooms
+    for (const [roomId, users] of Object.entries(rooms)) {
+      if (users.includes(socket.id)) {
+        socket.to(roomId).emit('user_disconnected');
+        socket.leave(roomId);
+        delete rooms[roomId];
+      }
+    }
+
+    // 2. Put user back in queue
+    // We reuse the join_queue logic or emit it internally if needed, 
+    // but the requirement says "On next_user event: Add user back to matchmaking queue"
+    // So we can just trigger the join_queue logic manually here or wait for frontend to emit join_queue.
+    // Given the "Instantly connect" requirement, let's process it here.
+    
+    if (userData) {
+      // Logic same as join_queue
+      waitingQueue = waitingQueue.filter(u => u.socketId !== socket.id);
+      const { name, department, matchPreference } = userData;
+      let matchIndex = -1;
+      
+      if (matchPreference === 'dept') {
+        matchIndex = waitingQueue.findIndex(u => u.dept === department && u.socketId !== socket.id);
+        if (matchIndex === -1) matchIndex = waitingQueue.findIndex(u => u.socketId !== socket.id);
+      } else {
+        matchIndex = waitingQueue.findIndex(u => u.socketId !== socket.id);
+      }
+
+      if (matchIndex !== -1) {
+        const partner = waitingQueue.splice(matchIndex, 1)[0];
+        const roomId = uuidv4();
+        rooms[roomId] = [socket.id, partner.socketId];
+        socket.join(roomId);
+        const partnerSocket = io.sockets.sockets.get(partner.socketId);
+        if (partnerSocket) partnerSocket.join(roomId);
+
+        socket.emit('matched', { roomId, partner: { name: partner.name, department: partner.dept } });
+        if (partnerSocket) partnerSocket.emit('matched', { roomId, partner: { name: userData.name, department: userData.department } });
+      } else {
+        waitingQueue.push({ dept: department, socketId: socket.id, name });
+      }
     }
   });
 
+  // User explicitly cancelled queue search
+  socket.on('leave_queue', () => {
+    waitingQueue = waitingQueue.filter(u => u.socketId !== socket.id);
+  });
+
   // Chat Signaling
-  socket.on('send-message', (data) => {
-    // data: { roomId, message: string, timestamp: Date }
-    socket.to(data.roomId).emit('receive-message', data.message);
+  socket.on('send_message', (data) => {
+    socket.to(data.roomId).emit('receive_message', data.message);
   });
 
   socket.on('typing-start', (roomId) => {
@@ -116,29 +152,14 @@ io.on('connection', (socket) => {
     socket.to(roomId).emit('typing-stop');
   });
 
-  // Leave room / End chat
-  socket.on('leave-room', (roomId) => {
-    console.log(`${socket.id} leaving room ${roomId}`);
-    socket.leave(roomId);
-    socket.to(roomId).emit('peer-disconnected');
-    
-    // Cleanup room
-    if (rooms[roomId]) {
-      delete rooms[roomId];
-    }
-  });
-
   // Disconnect
   socket.on('disconnect', () => {
     console.log('User disconnected:', socket.id);
-    
-    // Remove from queue if they were waiting
     waitingQueue = waitingQueue.filter(u => u.socketId !== socket.id);
 
-    // Notify room if they were in one
     for (const [roomId, users] of Object.entries(rooms)) {
       if (users.includes(socket.id)) {
-        socket.to(roomId).emit('peer-disconnected');
+        socket.to(roomId).emit('user_disconnected');
         delete rooms[roomId];
       }
     }
