@@ -1,6 +1,20 @@
-import { useEffect, useRef, useState } from 'react';
+import { io } from 'socket.io-client';
+import React, { useEffect, useRef, useState, memo } from 'react';
 import { useLocation, Navigate, useNavigate } from 'react-router-dom';
 import { useSocket } from '../context/SocketContext';
+
+const MessageItem = memo(({ msg, userInit, strangerInit }) => (
+  <div className={`bubble-row ${msg.isSelf ? 'you' : 'stranger'}`}>
+    <div className={`bav ${msg.isSelf ? 'y' : 's'}`}>
+      {msg.isSelf ? userInit : strangerInit}
+    </div>
+    <div className="bcol">
+      <div className={`bubble ${msg.isSelf ? 'y' : 's'}`}>{msg.text}</div>
+      <div className="btime">{msg.time}</div>
+    </div>
+  </div>
+));
+MessageItem.displayName = 'MessageItem';
 
 export default function TextChat() {
   const location = useLocation();
@@ -12,22 +26,32 @@ export default function TextChat() {
   const [isTyping, setIsTyping] = useState(false);
   const [peerDisconnected, setPeerDisconnected] = useState(false);
   const [inputText, setInputText] = useState('');
+  const [isSearching, setIsSearching] = useState(false);
+  const [currentRoomId, setCurrentRoomId] = useState(roomId);
+  const [currentPartner, setCurrentPartner] = useState(partner);
   
   const messagesEndRef = useRef(null);
   
   const userInit = userData?.name ? userData.name[0].toUpperCase() : 'Y';
-  const strangerInit = partner?.name ? partner.name[0].toUpperCase() : 'S';
+  // Use state-based partner name for initials
+  const strangerInit = currentPartner?.name ? currentPartner.name[0].toUpperCase() : 'S';
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  const scrollToBottom = (behavior = 'smooth') => {
+    messagesEndRef.current?.scrollIntoView({ behavior });
   };
 
   useEffect(() => {
-    scrollToBottom();
+    // For new messages, use smooth scroll
+    scrollToBottom('smooth');
   }, [messages, isTyping]);
+  
+  useEffect(() => {
+    // Initial scroll: instant
+    scrollToBottom('auto');
+  }, []);
 
   useEffect(() => {
-    if (!socket || !roomId) return;
+    if (!socket) return;
 
     const handleReceiveMessage = (message) => {
       setMessages(prev => [...prev, { text: message, isSelf: false, time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) }]);
@@ -42,28 +66,38 @@ export default function TextChat() {
       setIsTyping(false);
     };
 
-    socket.on('receive-message', handleReceiveMessage);
+    const handleMatched = ({ roomId: newRoomId, partner: newPartner }) => {
+      setIsSearching(false);
+      setPeerDisconnected(false);
+      setMessages([]); // Reset messages on new match
+      setCurrentRoomId(newRoomId);
+      setCurrentPartner(newPartner);
+    };
+
+    socket.on('receive_message', handleReceiveMessage);
     socket.on('typing-start', handleTypingStart);
     socket.on('typing-stop', handleTypingStop);
-    socket.on('peer-disconnected', handlePeerDisconnected);
+    socket.on('user_disconnected', handlePeerDisconnected);
+    socket.on('matched', handleMatched);
 
     return () => {
-      socket.off('receive-message', handleReceiveMessage);
+      socket.off('receive_message', handleReceiveMessage);
       socket.off('typing-start', handleTypingStart);
       socket.off('typing-stop', handleTypingStop);
-      socket.off('peer-disconnected', handlePeerDisconnected);
+      socket.off('user_disconnected', handlePeerDisconnected);
+      socket.off('matched', handleMatched);
     };
-  }, [socket, roomId]);
+  }, [socket]);
 
   const handleSendMessage = () => {
-    if (peerDisconnected || !inputText.trim()) return;
+    if (peerDisconnected || isSearching || !inputText.trim()) return;
     
     const text = inputText.trim();
     const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     
     setMessages(prev => [...prev, { text, isSelf: true, time }]);
-    socket.emit('send-message', { roomId, message: text, timestamp: new Date() });
-    socket.emit('typing-stop', roomId);
+    socket.emit('send_message', { roomId: currentRoomId, message: text, timestamp: new Date() });
+    socket.emit('typing-stop', currentRoomId);
     setInputText('');
   };
 
@@ -75,23 +109,28 @@ export default function TextChat() {
   };
 
   const handleTyping = (e) => {
-    if (peerDisconnected) return;
+    if (peerDisconnected || isSearching) return;
     setInputText(e.target.value);
     
     if (e.target.value.trim() !== '') {
-      socket.emit('typing-start', roomId);
+      socket.emit('typing-start', currentRoomId);
     } else {
-      socket.emit('typing-stop', roomId);
+      socket.emit('typing-stop', currentRoomId);
     }
   };
 
   const nextChat = () => {
-    navigate('/');
-    window.location.reload(); 
+    if (isSearching) return;
+    setIsSearching(true);
+    setPeerDisconnected(false);
+    setMessages([]);
+    setIsTyping(false);
+    socket.emit('next_user', userData);
   };
 
   const endChat = () => {
     navigate('/');
+    // No reload needed if we handle state well, but keeping it simple for "End"
     window.location.reload(); 
   };
   
@@ -102,7 +141,7 @@ export default function TextChat() {
   const blockStranger = () => {
     if (!window.confirm('Block this stranger?')) return;
     setPeerDisconnected(true);
-    socket.emit('leave-room', roomId);
+    socket.emit('next_user', userData); // Basically skips them
     setIsTyping(false);
   }
 
@@ -125,8 +164,8 @@ export default function TextChat() {
             </span>
           </div>
           <div className="h-info">
-            <div className="h-name">{partner?.name || 'Stranger'}</div>
-            <div className="h-dept">{partner?.department || 'CUSAT'}</div>
+            <div className="h-name">{isSearching ? 'Finding Match...' : (currentPartner?.name || 'Stranger')}</div>
+            <div className="h-dept">{isSearching ? 'Searching Campus' : (currentPartner?.department || 'CUSAT')}</div>
           </div>
           <div className="live-pill">
             <div className="live-dot"></div>Live
@@ -135,24 +174,24 @@ export default function TextChat() {
 
         {/* MESSAGES */}
         <div className="messages-area">
-          <div className="sys-msg ok">✓ Connected to a stranger</div>
-          
-          {peerDisconnected && (
-            <div className="sys-msg err">Stranger disconnected.</div>
+          {isSearching ? (
+            <div className="sys-msg ok">Searching for a new stranger...</div>
+          ) : (
+            <>
+              {!peerDisconnected && <div className="sys-msg ok">✓ Connected to a stranger</div>}
+              {peerDisconnected && <div className="sys-msg err">Stranger disconnected.</div>}
+            </>
           )}
 
           {messages.map((msg, idx) => (
-            <div key={idx} className={`bubble-row ${msg.isSelf ? 'you' : 'stranger'}`}>
-              <div className={`bav ${msg.isSelf ? 'y' : 's'}`}>
-                {msg.isSelf ? userInit : strangerInit}
-              </div>
-              <div className="bcol">
-                <div className={`bubble ${msg.isSelf ? 'y' : 's'}`}>{msg.text}</div>
-                <div className="btime">{msg.time}</div>
-              </div>
-            </div>
+            <MessageItem 
+              key={idx} 
+              msg={msg} 
+              userInit={userInit} 
+              strangerInit={strangerInit} 
+            />
           ))}
-          <div ref={messagesEndRef} />
+          <div ref={messagesEndRef} style={{ height: '1px' }} />
         </div>
 
         {/* TYPING INDICATOR */}
@@ -171,9 +210,9 @@ export default function TextChat() {
         {/* INPUT BAR */}
         <div className="input-bar">
           <div className="controls">
-            <button className="btn-next" onClick={nextChat}>
-              <span className="material-symbols-outlined">skip_next</span>
-              Next Chat
+            <button className="btn-next" onClick={nextChat} disabled={isSearching}>
+              <span className="material-symbols-outlined">{isSearching ? 'sync' : 'skip_next'}</span>
+              {isSearching ? 'Searching...' : 'Next Chat'}
             </button>
             <button className="btn-ghost-chat" onClick={endChat}>
               <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>logout</span>
@@ -194,17 +233,17 @@ export default function TextChat() {
               onChange={handleTyping}
               onKeyDown={handleKeyDown}
               className="msg-input"
-              placeholder={peerDisconnected ? "Chat ended..." : "Type a message…"}
+              placeholder={isSearching ? "Searching..." : (peerDisconnected ? "Chat ended..." : "Type a message…")}
               maxLength="500" 
               autoComplete="off" 
               autoCorrect="off" 
               spellCheck="true"
-              disabled={peerDisconnected}
+              disabled={peerDisconnected || isSearching}
             />
             <button 
               className="send-btn" 
               onClick={handleSendMessage}
-              disabled={!inputText.trim() || peerDisconnected}
+              disabled={!inputText.trim() || peerDisconnected || isSearching}
             >
               <span className="material-symbols-outlined" style={{ color: '#fff', fontSize: '18px' }}>send</span>
             </button>

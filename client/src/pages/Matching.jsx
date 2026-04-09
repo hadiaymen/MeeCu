@@ -40,15 +40,15 @@ export default function Matching() {
       }, 500);
     };
 
-    socket.on('match-found', handleMatchFound);
+    socket.on('matched', handleMatchFound);
 
     // Join the queue — only runs once because socket is stable
-    socket.emit('join-queue', currentUserData);
+    socket.emit('join_queue', currentUserData);
 
     return () => {
-      socket.off('match-found', handleMatchFound);
+      socket.off('matched', handleMatchFound);
       // Tell the server to remove us from the waiting queue on unmount
-      socket.emit('leave-queue', socket.id);
+      socket.emit('leave_queue', socket.id);
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [socket]);
@@ -118,15 +118,15 @@ export default function Matching() {
 
           <div className="flex gap-6 mb-8" style={{ width: '100%' }}>
             <div className="flex-1 text-center" style={{ background: 'rgba(255,255,255,0.04)', borderRadius: '16px', padding: '12px 8px', border: '1.5px solid rgba(255,255,255,0.07)' }}>
-              <div style={{ fontSize: '22px', fontWeight: 800, color: '#FF3B3B' }}>{onlineCount}</div>
+              <div style={{ fontSize: '22px', fontWeight: 800, color: 'var(--color-primary)' }}>{onlineCount}</div>
               <div style={{ fontSize: '11px', fontWeight: 600, color: '#9CA3AF', letterSpacing: '0.04em', textTransform: 'uppercase', marginTop: '2px' }}>Online</div>
             </div>
             <div className="flex-1 text-center" style={{ background: 'rgba(255,255,255,0.04)', borderRadius: '16px', padding: '12px 8px', border: '1.5px solid rgba(255,255,255,0.07)' }}>
-              <div style={{ fontSize: '22px', fontWeight: 800, color: '#FF3B3B' }}>~2s</div>
+              <div style={{ fontSize: '22px', fontWeight: 800, color: 'var(--color-secondary)' }}>~2s</div>
               <div style={{ fontSize: '11px', fontWeight: 600, color: '#9CA3AF', letterSpacing: '0.04em', textTransform: 'uppercase', marginTop: '2px' }}>Avg Wait</div>
             </div>
             <div className="flex-1 text-center" style={{ background: 'rgba(255,255,255,0.04)', borderRadius: '16px', padding: '12px 8px', border: '1.5px solid rgba(255,255,255,0.07)' }}>
-              <div style={{ fontSize: '22px', fontWeight: 800, color: '#FF3B3B' }}>8</div>
+              <div style={{ fontSize: '22px', fontWeight: 800, color: 'var(--color-tertiary)' }}>8</div>
               <div style={{ fontSize: '11px', fontWeight: 600, color: '#9CA3AF', letterSpacing: '0.04em', textTransform: 'uppercase', marginTop: '2px' }}>Depts</div>
             </div>
           </div>

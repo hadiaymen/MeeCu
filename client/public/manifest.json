@@ -1,12 +1,12 @@
 {
-  "name": "MeeCu Chat",
-  "short_name": "MeeCu",
+  "name": "MeeCU",
+  "short_name": "MeeCU",
   "description": "Real-time anonymous campus chat — meet strangers at CUSAT",
   "start_url": "/",
   "display": "standalone",
   "orientation": "portrait",
-  "background_color": "#000000",
-  "theme_color": "#00f0ff",
+  "background_color": "#11131A",
+  "theme_color": "#11131A",
   "icons": [
     {
       "src": "/icon.png",
