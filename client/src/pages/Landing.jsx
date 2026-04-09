@@ -32,7 +32,7 @@ export default function Landing() {
     // Randomize online count slightly
     const base = 241;
     setOnlineCount(base + Math.floor(Math.random() * 20 - 5));
-    
+
     // Update it periodically
     const interval = setInterval(() => {
       setOnlineCount(prev => prev + (Math.random() > 0.5 ? 1 : -1));
@@ -55,7 +55,7 @@ export default function Landing() {
   const handleSubmit = () => {
     setNameError(false);
     setDeptError(false);
-    
+
     if (!name.trim()) {
       setNameError(true);
       return;
@@ -64,13 +64,13 @@ export default function Landing() {
       setDeptError(true);
       return;
     }
-    
-    navigate('/matching', { 
-      state: { 
-        name: name.trim(), 
-        department, 
-        matchPreference 
-      } 
+
+    navigate('/matching', {
+      state: {
+        name: name.trim(),
+        department,
+        matchPreference
+      }
     });
   };
 
@@ -90,7 +90,7 @@ export default function Landing() {
       </nav>
 
       <main className="relative z-10 flex flex-col items-center justify-center px-4 pb-10" style={{ minHeight: 'calc(100dvh - 70px)' }}>
-        
+
         <div className="card-main w-full max-w-sm p-7 relative" style={{ marginTop: '-10px' }}>
           <div className="red-glow-hero"></div>
 
@@ -113,7 +113,7 @@ export default function Landing() {
                 type="text"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                placeholder="e.g. Alex"
+                placeholder="e.g. Pathumma,Kunjappu"
                 className="glass-input w-full px-4 py-3 rounded-2xl text-white"
                 style={{ fontSize: '15px', fontWeight: 600, borderColor: nameError ? '#FF3B3B' : '' }}
               />
@@ -141,15 +141,15 @@ export default function Landing() {
               Match Mode
             </label>
             <div className="toggle-container">
-              <button 
-                className={`toggle-btn ${matchPreference === 'random' ? 'active' : ''}`} 
+              <button
+                className={`toggle-btn ${matchPreference === 'random' ? 'active' : ''}`}
                 onClick={() => setMatchPreference('random')}
               >
                 <span className="material-symbols-outlined" style={{ fontSize: '16px', verticalAlign: '-3px', marginRight: '5px' }}>shuffle</span>
                 Random
               </button>
-              <button 
-                className={`toggle-btn ${matchPreference === 'dept' ? 'active' : ''}`} 
+              <button
+                className={`toggle-btn ${matchPreference === 'dept' ? 'active' : ''}`}
                 onClick={() => setMatchPreference('dept')}
               >
                 <span className="material-symbols-outlined" style={{ fontSize: '16px', verticalAlign: '-3px', marginRight: '5px' }}>school</span>
@@ -159,9 +159,9 @@ export default function Landing() {
           </div>
 
           <div className="anim-4">
-            <button 
-              onClick={handleSubmit} 
-              className="btn-primary w-full py-4 rounded-full text-white font-bold flex items-center justify-center gap-2" 
+            <button
+              onClick={handleSubmit}
+              className="btn-primary w-full py-4 rounded-full text-white font-bold flex items-center justify-center gap-2"
               style={{ fontSize: '16px', letterSpacing: '0.01em' }}
             >
               <span className="material-symbols-outlined" style={{ fontSize: '20px' }}>chat</span>
@@ -169,9 +169,9 @@ export default function Landing() {
             </button>
 
             {deferredPrompt && (
-              <button 
+              <button
                 onClick={handleInstallClick}
-                className="mt-3 btn-ghost w-full py-3 rounded-full font-bold flex items-center justify-center gap-2" 
+                className="mt-3 btn-ghost w-full py-3 rounded-full font-bold flex items-center justify-center gap-2"
                 style={{ fontSize: '14px', letterSpacing: '0.02em', color: '#9CA3AF' }}
               >
                 <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>download</span>
@@ -188,7 +188,7 @@ export default function Landing() {
             </div>
             <div>
               <p style={{ fontWeight: 700, fontSize: '14px', marginBottom: '3px' }}>Verified Only</p>
-              <p style={{ color: '#9CA3AF', fontSize: '12.5px', lineHeight: 1.5 }}>Access restricted to @cusat.ac.in emails for a safe environment.</p>
+              <p style={{ color: '#9CA3AF', fontSize: '12.5px', lineHeight: 1.5 }}>Access restricted to students for a safe environment.</p>
             </div>
           </div>
           <div className="feature-card px-5 py-4 flex items-start gap-4 anim-5">

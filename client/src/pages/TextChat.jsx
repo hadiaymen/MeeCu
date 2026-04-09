@@ -12,9 +12,9 @@ export default function TextChat() {
   const [isTyping, setIsTyping] = useState(false);
   const [peerDisconnected, setPeerDisconnected] = useState(false);
   const [inputText, setInputText] = useState('');
-  
+
   const messagesEndRef = useRef(null);
-  
+
   const userInit = userData?.name ? userData.name[0].toUpperCase() : 'Y';
   const strangerInit = partner?.name ? partner.name[0].toUpperCase() : 'S';
 
@@ -57,10 +57,10 @@ export default function TextChat() {
 
   const handleSendMessage = () => {
     if (peerDisconnected || !inputText.trim()) return;
-    
+
     const text = inputText.trim();
     const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    
+
     setMessages(prev => [...prev, { text, isSelf: true, time }]);
     socket.emit('send-message', { roomId, message: text, timestamp: new Date() });
     socket.emit('typing-stop', roomId);
@@ -77,7 +77,7 @@ export default function TextChat() {
   const handleTyping = (e) => {
     if (peerDisconnected) return;
     setInputText(e.target.value);
-    
+
     if (e.target.value.trim() !== '') {
       socket.emit('typing-start', roomId);
     } else {
@@ -87,18 +87,18 @@ export default function TextChat() {
 
   const nextChat = () => {
     navigate('/');
-    window.location.reload(); 
+    window.location.reload();
   };
 
   const endChat = () => {
     navigate('/');
-    window.location.reload(); 
+    window.location.reload();
   };
-  
+
   const reportStranger = () => {
     alert('Report submitted. Thank you for keeping MeeCU safe.');
   }
-  
+
   const blockStranger = () => {
     if (!window.confirm('Block this stranger?')) return;
     setPeerDisconnected(true);
@@ -120,7 +120,7 @@ export default function TextChat() {
         <div className="chat-header">
           <div className="h-avatar">
             <span className="material-symbols-outlined"
-                  style={{ fontSize: '19px', color: 'rgba(255,140,140,0.75)', fontVariationSettings: "'FILL' 0,'wght' 300,'GRAD' 0,'opsz' 24" }}>
+              style={{ fontSize: '19px', color: 'rgba(255,140,140,0.75)', fontVariationSettings: "'FILL' 0,'wght' 300,'GRAD' 0,'opsz' 24" }}>
               person
             </span>
           </div>
@@ -136,7 +136,7 @@ export default function TextChat() {
         {/* MESSAGES */}
         <div className="messages-area">
           <div className="sys-msg ok">✓ Connected to a stranger</div>
-          
+
           {peerDisconnected && (
             <div className="sys-msg err">Stranger disconnected.</div>
           )}
@@ -189,20 +189,20 @@ export default function TextChat() {
 
           <div className="input-row">
             <input
-              type="text" 
+              type="text"
               value={inputText}
               onChange={handleTyping}
               onKeyDown={handleKeyDown}
               className="msg-input"
               placeholder={peerDisconnected ? "Chat ended..." : "Type a message…"}
-              maxLength="500" 
-              autoComplete="off" 
-              autoCorrect="off" 
+              maxLength="500"
+              autoComplete="off"
+              autoCorrect="off"
               spellCheck="true"
               disabled={peerDisconnected}
             />
-            <button 
-              className="send-btn" 
+            <button
+              className="send-btn"
               onClick={handleSendMessage}
               disabled={!inputText.trim() || peerDisconnected}
             >
